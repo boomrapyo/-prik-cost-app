@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คิดต้นทุน พริกแกะทอด</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
+
+:root{
+  --cream:#262624;
+  --card:#30302D;
+  --ink:#ECE8E1;
+  --ink-soft:#A19C93;
+  --chili:#D97757;
+  --chili-dark:#E8916F;
+  --gold:#D9A758;
+  --sage:#7C8C6C;
+  --line:#454440;
+  --good:#7FBF7F;
+  --bad:#E28577;
+  --field-bg:#26251F;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--cream);
+  color:var(--ink);
+  font-family:'Noto Sans Thai',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:'Noto Serif Thai',serif; margin:0;}
+.app{max-width:920px;margin:0 auto;padding:20px 16px 60px;}
+
+.header{padding:6px 2px 18px;border-bottom:2px solid var(--chili);margin-bottom:18px;}
+.header .eyebrow{color:var(--chili);font-weight:600;font-size:13px;letter-spacing:.02em;}
+.header h1{font-size:26px;color:var(--ink);margin-top:4px;}
+.header p{color:var(--ink-soft);margin:6px 0 0;font-size:14px;}
+
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:18px;scrollbar-width:thin;}
+.tab-btn{
+  flex:0 0 auto;padding:9px 14px;border-radius:999px;border:1.5px solid var(--line);
+  background:var(--card);color:var(--ink-soft);font-family:'Noto Sans Thai';font-size:14px;font-weight:600;
+  cursor:pointer;white-space:nowrap;transition:all .15s ease;
+}
+.tab-btn:hover{border-color:var(--gold);}
+.tab-btn.active{background:var(--chili);border-color:var(--chili);color:#fff;}
+
+.panel{display:none;}
+.panel.active{display:block;animation:fade .18s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:none;}}
+
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 20px;margin-bottom:16px;
+}
+.card h2{font-size:19px;margin-bottom:4px;}
+.card .sub{color:var(--ink-soft);font-size:13.5px;margin-bottom:14px;}
+
+.field-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:9px 0;border-bottom:1px dashed var(--line);
+}
+.field-row:last-child{border-bottom:none;}
+.field-row label{font-size:14.5px;flex:1;}
+.field-row .hint{display:block;color:var(--ink-soft);font-size:12px;margin-top:2px;}
+.input-wrap{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
+input[type=number]{
+  width:100px;padding:7px 9px;border:1.5px solid var(--line);border-radius:8px;
+  font-family:'Noto Sans Thai';font-size:14.5px;text-align:right;background:var(--field-bg);color:var(--ink);
+}
+input[type=number]:focus{outline:none;border-color:var(--chili);}
+.unit{font-size:13px;color:var(--ink-soft);width:64px;}
+
+.calc-row{display:flex;justify-content:space-between;padding:7px 0;font-size:14.5px;}
+.calc-row .val{font-weight:600;}
+.calc-row.total{border-top:1.5px solid var(--ink);margin-top:6px;padding-top:10px;font-size:16px;}
+.calc-row.total .val{color:var(--chili);}
+
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px;}
+th{text-align:left;color:var(--ink-soft);font-weight:600;font-size:12.5px;padding:6px 8px;border-bottom:2px solid var(--ink);}
+td{padding:7px 8px;border-bottom:1px solid var(--line);}
+td.num,th.num{text-align:right;}
+tr.sum td{border-top:1.5px solid var(--ink);border-bottom:none;font-weight:700;padding-top:10px;}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:560px){.two-col{grid-template-columns:1fr;}}
+.col-head{font-family:'Noto Serif Thai';font-size:16px;color:var(--chili-dark);margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid var(--gold);}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;background:#3A3935;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:14px;}
+.toggle-row .lbl{font-weight:600;font-size:14.5px;}
+.switch{position:relative;width:46px;height:26px;flex:0 0 auto;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;inset:0;background:#5A574F;border-radius:999px;cursor:pointer;transition:.2s;}
+.slider:before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#ECE8E1;border-radius:50%;transition:.2s;}
+.switch input:checked + .slider{background:var(--sage);}
+.switch input:checked + .slider:before{transform:translateX(20px);}
+.dimmed{opacity:.45;pointer-events:none;}
+
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;}
+.badge.ok{background:#37432F;color:var(--good);}
+.badge.warn{background:#4A2E28;color:var(--bad);}
+
+.footer-note{text-align:center;color:var(--ink-soft);font-size:12.5px;margin-top:22px;}
+.save-btn{
+  background:var(--chili);color:#fff;border:none;border-radius:8px;padding:9px 16px;
+  font-family:'Noto Sans Thai';font-weight:600;font-size:13.5px;cursor:pointer;
+}
+.save-btn.secondary{background:transparent;color:var(--chili);border:1.5px solid var(--chili);}
+.toolbar{display:flex;gap:8px;justify-content:flex-end;margin-bottom:10px;flex-wrap:wrap;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="eyebrow">ระบบคำนวณต้นทุน</div>
+    <h1>พริกแกะแล้วทอด — คิดต้นทุนต่อชุด ต่อถุง ต่อออเดอร์</h1>
+    <p>กรอกราคาที่เปลี่ยนแปลงได้ในแต่ละหน้า ระบบจะคำนวณต้นทุนและกำไรให้อัตโนมัติ ข้อมูลถูกบันทึกไว้ในเครื่องนี้ให้อัตโนมัติ</p>
+  </div>
+
+  <div class="toolbar">
+    <button class="save-btn secondary" id="exportBtn">ส่งออกข้อมูล (.csv)</button>
+    <button class="save-btn secondary" id="resetBtn">ล้างค่าเริ่มต้น</button>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab-btn active" data-tab="t1">1. วัตถุดิบ</button>
+    <button class="tab-btn" data-tab="t2">2. สูตรเครื่องปรุง</button>
+    <button class="tab-btn" data-tab="t3">3. ค่าจ้าง+น้ำมัน</button>
+    <button class="tab-btn" data-tab="t4">4. บรรจุภัณฑ์</button>
+    <button class="tab-btn" data-tab="t5">5. สรุปต้นทุน</button>
+    <button class="tab-btn" data-tab="t6">6. ตั้งราคาขาย</button>
+    <button class="tab-btn" data-tab="t7">7. คำนวณยอดขาย</button>
+    <button class="tab-btn" data-tab="t8">8. ค่าแอด</button>
+  </div>
+
+  <!-- TAB 1 -->
+  <div class="panel active" id="t1">
+    <div class="card">
+      <h2>ราคาวัตถุดิบ (ส่วนที่ 1)</h2>
+      <div class="sub">แก้ราคาได้ตามราคาตลาดที่ขึ้นลง หน่วยตามที่ซื้อจริง</div>
+
+      <div class="field-row"><label>น้ำมันปาล์ม ยี่ห้อโบนั้ส</label>
+        <div class="input-wrap"><input type="number" step="0.01" data-path="prices.oilBonus"><span class="unit">บาท/ลิตร</span></div></div>
+      <div class="field-row"><label>น้ำมันเมล็ดในปาล์ม ตราดอกไม้</label>
+        <div class="input-wrap"><input type="number" step="0.01" data-path="prices.oilDokmai"><span class="unit">บาท/ลิตร</span></div></div>
+      <div class="field-row"><label>แป้งเซฟแพ็ก (แป้งทอดกรอบ)</label>
+        <div class="input-wrap"><input type="number" step="0.01" data-path="prices.flourSavepak"><span class="unit">บาท/กก.</span></div></div>
+      <div class="field-row"><label>แป้งข้าวเจ้า</label>
+        <div class="input-wrap"><input type="number" step="0.01" data-path="prices.flourKhaoJao"><span class="unit">บาท/กก.</span></div></div>
+      <div class="field-row"><label>แป้งมันสำปะหลัง</label>
+        <div class="input-wrap"><input type="number" step="0.01" data-path="prices.flourManSamPalang"><span class="unit">บาท/กก.</span></div></div>
+      <div class="field-row"><label>แป้งข้าวโพด</label>
+        <div class="input-wrap"><input type="number" step="0.01" data-path="prices.flourKhaoPhod"><span class="unit">บาท/กก.</span></div></div>
+      <div class="field-row"><label>เกลือ</label>
+        <div class="input-wrap"><input type="number" step="0.01" data-path="prices.salt"><span class="unit">บาท/กก.</span></div></div>
+      <div class="field-row"><label>น้ำตาล</label>
+        <div class="input-wrap"><input type="number" step="0.01" data-path="prices.sugar"><span class="unit">บาท/กก.</span></div></div>
+      <div class="field-row"><label>ผงชูรส</label>
+        <div class="input-wrap"><input type="number" step="0.01" data-path="prices.msg"><span class="unit">บาท/กก.</span></div></div>
+      <div class="field-row"><label>งาขาว</label>
+        <div class="input-wrap"><input type="number" step="0.01" data-path="prices.sesame"><span class="unit">บาท/กก.</span></div></div>
+      <div class="field-row"><label>พริก (ซื้อทั้งกระสอบ)</label>
+        <div class="input-wrap"><input type="number" step="1" data-path="prices.chiliSack"><span class="unit">บาท/กระสอบ</span></div></div>
+    </div>
+  </div>
+
+  <!-- TAB 2 -->
+  <div class="panel" id="t2">
+    <div class="card">
+      <h2>สูตรเครื่องปรุง (ต่อ 1 ชุด)</h2>
+      <div class="sub">สูตรคงที่ตามส่วนผสม 1 ชุด ใช้พริกแกะแล้ว 1,500 กรัม — ราคาต่อกก. ดึงมาจากหน้า 1 อัตโนมัติ</div>
+
+      <div class="field-row"><label>จำนวนชุด (เปลือกพริก 1.5 กก.) ที่ได้ต่อกระสอบ<span class="hint">โดยประมาณ ขึ้นกับพริกเสียหาย</span></label>
+        <div class="input-wrap"><input type="number" step="0.1" data-path="batch.sackYield"><span class="unit">ชุด/กระสอบ</span></div></div>
+
+      <table>
+        <thead><tr><th>รายการ</th><th class="num">ปริมาณ/ชุด</th><th class="num">ราคาที่ใช้</th><th class="num">ต้นทุน (บาท)</th></tr></thead>
+        <tbody id="recipeTable"></tbody>
+        <tfoot><tr class="sum"><td colspan="3">รวมต้นทุนเครื่องปรุง + พริก ต่อชุด</td><td class="num" id="recipeTotal">-</td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 3 -->
+  <div class="panel" id="t3">
+    <div class="card">
+      <h2>ค่าจ้างแปรรูป (ส่วนที่ 2)</h2>
+      <div class="sub">ค่าจ้างต่อชุด (คำนวณจากเปลือกพริก 1.5 กก./ชุด)</div>
+
+      <div class="field-row"><label>ค่าจ้างแกะพริก (ทั้งกระสอบ)</label>
+        <div class="input-wrap"><input type="number" step="1" data-path="batch.peelWage"><span class="unit">บาท/กระสอบ</span></div></div>
+      <div class="field-row"><label>ค่าจ้างต้ม</label>
+        <div class="input-wrap"><input type="number" step="1" data-path="batch.boilWage"><span class="unit">บาท/ชุด</span></div></div>
+      <div class="field-row"><label>ค่าจ้างทอด</label>
+        <div class="input-wrap"><input type="number" step="1" data-path="batch.fryWage"><span class="unit">บาท/ชุด</span></div></div>
+      <div class="field-row"><label>น้ำหนักพริกทอดสำเร็จที่ได้ต่อชุด</label>
+        <div class="input-wrap"><input type="number" step="0.1" data-path="batch.friedYieldKg"><span class="unit">กก./ชุด</span></div></div>
+
+      <div class="calc-row"><span>ค่าแกะเฉลี่ยต่อชุด (600 ÷ จำนวนชุด/กระสอบ)</span><span class="val" id="peelPerBatch">-</span></div>
+      <div class="calc-row total"><span>รวมค่าจ้างแปรรูปต่อชุด</span><span class="val" id="wageTotal">-</span></div>
+    </div>
+
+    <div class="card">
+      <h2>น้ำมันทอด (ประมาณการ)</h2>
+      <div class="sub">ผสมน้ำมันปาล์มโบนัส:ดอกไม้ ≈ 70:30 น้ำมันที่เหลือขายคืนได้ ช่วยหักลบต้นทุน</div>
+
+      <div class="field-row"><label>สัดส่วนน้ำมันโบนั้ส</label>
+        <div class="input-wrap"><input type="number" step="1" data-path="oil.ratioBonus"><span class="unit">%</span></div></div>
+      <div class="field-row"><label>สัดส่วนน้ำมันดอกไม้</label>
+        <div class="input-wrap"><input type="number" step="1" data-path="oil.ratioDokmai"><span class="unit">%</span></div></div>
+      <div class="field-row"><label>ปริมาณน้ำมันต่อการเทกระทะ 1 ครั้ง</label>
+        <div class="input-wrap"><input type="number" step="0.5" data-path="oil.volumePerFill"><span class="unit">ลิตร</span></div></div>
+      <div class="field-row"><label>ทอดได้กี่ชุด ต่อการเทน้ำมัน 1 ครั้ง<span class="hint">พี่บอกว่าประมาณ 2-4 ชุด กรอกค่าเฉลี่ยที่ใช้จริง</span></label>
+        <div class="input-wrap"><input type="number" step="0.1" data-path="oil.batchesPerFill"><span class="unit">ชุด</span></div></div>
+      <div class="field-row"><label>ราคาน้ำมันใช้แล้ว (ขายคืน)</label>
+        <div class="input-wrap"><input type="number" step="1" data-path="oil.usedOilGallonPrice"><span class="unit">บาท</span></div></div>
+      <div class="field-row"><label>ต่อขนาดแกลลอน</label>
+        <div class="input-wrap"><input type="number" step="1" data-path="oil.usedOilGallonLiters"><span class="unit">ลิตร</span></div></div>
+
+      <div class="calc-row"><span>ต้นทุนน้ำมันต่อการเทกระทะ (ก่อนหักคืน)</span><span class="val" id="oilGross">-</span></div>
+      <div class="calc-row"><span>มูลค่าน้ำมันใช้แล้วที่ขายคืนได้</span><span class="val" id="oilResale">-</span></div>
+      <div class="calc-row total"><span>ต้นทุนน้ำมันสุทธิ ต่อชุด</span><span class="val" id="oilPerBatch">-</span></div>
+    </div>
+
+    <div class="card">
+      <div class="calc-row total"><span>รวมค่าจ้าง + น้ำมันทอด ต่อชุด</span><span class="val" id="processTotal">-</span></div>
+    </div>
+  </div>
+
+  <!-- TAB 4 -->
+  <div class="panel" id="t4">
+    <div class="card">
+      <div class="toggle-row">
+        <span class="lbl">รวมค่าบรรจุภัณฑ์ในการคำนวณต้นทุน</span>
+        <label class="switch"><input type="checkbox" id="pkgToggle" data-path="packaging.enabled"><span class="slider"></span></label>
+      </div>
+      <div id="pkgFields">
+        <h2>บรรจุภัณฑ์ (ส่วนที่ 3-4)</h2>
+        <div class="sub">ปิดสวิตช์ด้านบนได้ถ้ายังไม่ต้องคิดต้นทุนส่วนนี้ (เผื่อใช้อนาคต)</div>
+
+        <div class="field-row"><label>กล่องพัสดุ เบอร์ B</label>
+          <div class="input-wrap"><input type="number" step="0.1" data-path="packaging.boxPrice"><span class="unit">บาท/กล่อง</span></div></div>
+        <div class="field-row"><label>เทปกาว</label>
+          <div class="input-wrap"><input type="number" step="1" data-path="packaging.tapePrice"><span class="unit">บาท/ม้วน</span></div></div>
+        <div class="field-row"><label>พันเทปได้กี่กล่องต่อม้วน</label>
+          <div class="input-wrap"><input type="number" step="1" data-path="packaging.boxesPerTapeRoll"><span class="unit">กล่อง/ม้วน</span></div></div>
+        <div class="field-row"><label>ถุง 150 กรัม (18×26) แพ็ก 50 ใบ</label>
+          <div class="input-wrap"><input type="number" step="1" data-path="packaging.bag150Pack"><span class="unit">บาท/แพ็ก</span></div></div>
+        <div class="field-row"><label>ถุง 250 กรัม (20×30) แพ็ก 50 ใบ</label>
+          <div class="input-wrap"><input type="number" step="1" data-path="packaging.bag250Pack"><span class="unit">บาท/แพ็ก</span></div></div>
+        <div class="field-row"><label>สติกเกอร์โลโก้</label>
+          <div class="input-wrap"><input type="number" step="0.1" data-path="packaging.stickerPrice"><span class="unit">บาท/ดวง</span></div></div>
+
+        <div class="calc-row"><span>ต้นทุนบรรจุภัณฑ์ต่อถุง 150 กรัม</span><span class="val" id="pack150">-</span></div>
+        <div class="calc-row"><span>ต้นทุนบรรจุภัณฑ์ต่อถุง 250 กรัม</span><span class="val" id="pack250">-</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5 -->
+  <div class="panel" id="t5">
+    <div class="card">
+      <h2>สรุปต้นทุนต่อถุง</h2>
+      <div class="sub">% คำนวณเทียบกับราคาขายที่ตั้งไว้ในหน้า "ตั้งราคาขาย"</div>
+      <div class="two-col">
+        <div>
+          <div class="col-head">150 กรัม</div>
+          <div class="calc-row"><span>วัตถุดิบ+เครื่องปรุง</span><span class="val" id="s150-mat">-</span></div>
+          <div class="calc-row"><span>ค่าแปรรูป (จ้าง+น้ำมัน)</span><span class="val" id="s150-proc">-</span></div>
+          <div class="calc-row"><span>บรรจุภัณฑ์</span><span class="val" id="s150-pack">-</span></div>
+          <div class="calc-row total"><span>รวมต้นทุน</span><span class="val" id="s150-total">-</span></div>
+          <div class="calc-row"><span>คิดเป็น % ของราคาขาย</span><span class="val" id="s150-pct">-</span></div>
+        </div>
+        <div>
+          <div class="col-head">250 กรัม</div>
+          <div class="calc-row"><span>วัตถุดิบ+เครื่องปรุง</span><span class="val" id="s250-mat">-</span></div>
+          <div class="calc-row"><span>ค่าแปรรูป (จ้าง+น้ำมัน)</span><span class="val" id="s250-proc">-</span></div>
+          <div class="calc-row"><span>บรรจุภัณฑ์</span><span class="val" id="s250-pack">-</span></div>
+          <div class="calc-row total"><span>รวมต้นทุน</span><span class="val" id="s250-total">-</span></div>
+          <div class="calc-row"><span>คิดเป็น % ของราคาขาย</span><span class="val" id="s250-pct">-</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 6 -->
+  <div class="panel" id="t6">
+    <div class="card">
+      <h2>ตั้งราคาขาย (หัก GP แพลตฟอร์ม)</h2>
+      <div class="sub">ตั้งราคาที่จะลงขาย แล้วดูว่าหัก GP ของ TikTok/Shopee แล้วเหลือรับจริงเท่าไหร่</div>
+      <div class="two-col">
+        <div>
+          <div class="col-head">150 กรัม</div>
+          <div class="field-row"><label>ราคาขายที่ตั้ง</label>
+            <div class="input-wrap"><input type="number" step="1" data-path="pricing.sell150"><span class="unit">บาท</span></div></div>
+          <div class="field-row"><label>หัก GP แพลตฟอร์ม</label>
+            <div class="input-wrap"><input type="number" step="0.1" data-path="pricing.gp150"><span class="unit">%</span></div></div>
+          <div class="field-row"><label>อย่างน้อยต้องได้รับสุทธิ</label>
+            <div class="input-wrap"><input type="number" step="1" data-path="pricing.floorNet150"><span class="unit">บาท</span></div></div>
+          <div class="calc-row"><span>ยอดรับจริงหลังหัก GP</span><span class="val" id="net150">-</span></div>
+          <div class="calc-row"><span>ต้นทุนรวม</span><span class="val" id="cost150ref">-</span></div>
+          <div class="calc-row total"><span>กำไรต่อถุง</span><span class="val" id="profit150">-</span></div>
+          <div id="floorBadge150" style="margin-top:8px;"></div>
+        </div>
+        <div>
+          <div class="col-head">250 กรัม</div>
+          <div class="field-row"><label>ราคาขายที่ตั้ง</label>
+            <div class="input-wrap"><input type="number" step="1" data-path="pricing.sell250"><span class="unit">บาท</span></div></div>
+          <div class="field-row"><label>หัก GP แพลตฟอร์ม</label>
+            <div class="input-wrap"><input type="number" step="0.1" data-path="pricing.gp250"><span class="unit">%</span></div></div>
+          <div class="field-row"><label>อย่างน้อยต้องได้รับสุทธิ</label>
+            <div class="input-wrap"><input type="number" step="1" data-path="pricing.floorNet250"><span class="unit">บาท</span></div></div>
+          <div class="calc-row"><span>ยอดรับจริงหลังหัก GP</span><span class="val" id="net250">-</span></div>
+          <div class="calc-row"><span>ต้นทุนรวม</span><span class="val" id="cost250ref">-</span></div>
+          <div class="calc-row total"><span>กำไรต่อถุง</span><span class="val" id="profit250">-</span></div>
+          <div id="floorBadge250" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 7 -->
+  <div class="panel" id="t7">
+    <div class="card">
+      <h2>คำนวณต้นทุน-กำไรตามจำนวนที่จะขาย</h2>
+      <div class="sub">กรอกจำนวนถุงที่จะผลิต/ขาย ดูต้นทุนรวมและกำไรรวมแยกตามขนาด</div>
+
+      <div class="field-row"><label>จำนวนถุง 150 กรัม</label>
+        <div class="input-wrap"><input type="number" step="1" data-path="special.qty150"><span class="unit">ถุง</span></div></div>
+      <div class="field-row"><label>จำนวนถุง 250 กรัม</label>
+        <div class="input-wrap"><input type="number" step="1" data-path="special.qty250"><span class="unit">ถุง</span></div></div>
+
+      <table>
+        <thead><tr><th>ขนาด</th><th class="num">จำนวน</th><th class="num">ต้นทุนรวม</th><th class="num">กำไรรวม</th></tr></thead>
+        <tbody>
+          <tr><td>150 กรัม</td><td class="num" id="sp-qty150">-</td><td class="num" id="sp-cost150">-</td><td class="num" id="sp-profit150">-</td></tr>
+          <tr><td>250 กรัม</td><td class="num" id="sp-qty250">-</td><td class="num" id="sp-cost250">-</td><td class="num" id="sp-profit250">-</td></tr>
+          <tr class="sum"><td colspan="2">รวมทั้งหมด</td><td class="num" id="sp-costAll">-</td><td class="num" id="sp-profitAll">-</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 8 -->
+  <div class="panel" id="t8">
+    <div class="card">
+      <h2>ค่าแอด → กำไรสุทธิจริง</h2>
+      <div class="sub">ใช้ราคาขาย ต้นทุน และ % GP ที่ตั้งไว้ในหน้าอื่นๆ มาคำนวณร่วมกับค่าแอด (เฉลี่ยระหว่างถุง 150 และ 250 กรัม) จะได้เห็นกำไรที่เหลือจริงๆ</div>
+
+      <div class="field-row"><label>จำนวนคำสั่งซื้อ (SKU)</label>
+        <div class="input-wrap"><input type="number" step="1" data-path="ads.totalOrders"><span class="unit">ออเดอร์</span></div></div>
+      <div class="field-row"><label>ต้นทุนค่าแอดรวม</label>
+        <div class="input-wrap"><input type="number" step="1" data-path="ads.totalAdSpend"><span class="unit">บาท</span></div></div>
+
+      <table>
+        <thead><tr><th>รายการ</th><th class="num">จำนวนเงิน</th></tr></thead>
+        <tbody>
+          <tr><td>ยอดขายรวม (ราคาที่ตั้งไว้ ก่อนหัก GP)</td><td class="num" id="ads-grossSales">-</td></tr>
+          <tr><td>หัก GP แพลตฟอร์ม</td><td class="num" id="ads-gpFee">-</td></tr>
+          <tr><td>ยอดรับจริงหลังหัก GP</td><td class="num" id="ads-netSales">-</td></tr>
+          <tr><td>หัก ต้นทุนสินค้า (วัตถุดิบ+แปรรูป+บรรจุภัณฑ์)</td><td class="num" id="ads-productCost">-</td></tr>
+          <tr><td>หัก ค่าแอด</td><td class="num" id="ads-adSpend">-</td></tr>
+          <tr class="sum"><td>กำไรสุทธิ</td><td class="num" id="ads-netProfit">-</td></tr>
+        </tbody>
+      </table>
+      <div class="calc-row"><span>ต้นทุนค่าแอดต่อคำสั่งซื้อ</span><span class="val" id="ads-cpa">-</span></div>
+      <div class="calc-row"><span>ค่าแอดคิดเป็นกี่ % ของยอดขาย</span><span class="val" id="ads-pct">-</span></div>
+    </div>
+  </div>
+
+  <div class="footer-note" id="saveStatus">กำลังโหลดข้อมูล...</div>
+</div>
+
+<script>
+const RECIPE = {
+  chiliShellG: 1500,
+  msgG: 290, sugarG: 290, saltG: 50,
+  flourSavepakG: 600, flourKhaoJaoG: 300, flourManSamPalangG: 450, flourKhaoPhodG: 150,
+  sesameG: 1000
+};
+
+const DEFAULT_STATE = {
+  prices:{ oilBonus:45, oilDokmai:42, flourSavepak:35, flourKhaoJao:28, flourManSamPalang:25, flourKhaoPhod:30, salt:10, sugar:24, msg:45, sesame:90, chiliSack:1200 },
+  batch:{ sackYield:3, peelWage:600, boilWage:50, fryWage:80, friedYieldKg:5 },
+  oil:{ ratioBonus:70, ratioDokmai:30, volumePerFill:5, batchesPerFill:3, usedOilGallonPrice:480, usedOilGallonLiters:18 },
+  packaging:{ enabled:true, boxPrice:2.5, tapePrice:36, boxesPerTapeRoll:50, bag150Pack:155, bag250Pack:190, stickerPrice:1 },
+  pricing:{ sell150:150, gp150:26.39, sell250:240, gp250:0, floorNet150:150, floorNet250:200 },
+  special:{ qty150:0, qty250:0 },
+  ads:{ totalOrders:0, totalAdSpend:0 }
+};
+
+let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+const STORAGE_KEY = 'prik-cost-app-v1';
+
+function getPath(o,p){ return p.split('.').reduce((a,k)=>a&&a[k]!==undefined?a[k]:undefined,o); }
+function setPath(o,p,v){ const k=p.split('.'); let c=o; for(let i=0;i<k.length-1;i++) c=c[k[i]]; c[k[k.length-1]]=v; }
+function fmt(n){ if(isNaN(n)) return '-'; return n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function baht(n){ return fmt(n)+' บาท'; }
+
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){
+      const loaded = JSON.parse(res.value);
+      state = Object.assign(JSON.parse(JSON.stringify(DEFAULT_STATE)), loaded);
+      for(const k in DEFAULT_STATE){ state[k] = Object.assign({}, DEFAULT_STATE[k], loaded[k]||{}); }
+    }
+    document.getElementById('saveStatus').textContent = 'บันทึกอัตโนมัติ — โหลดข้อมูลล่าสุดแล้ว';
+  }catch(e){
+    document.getElementById('saveStatus').textContent = 'บันทึกอัตโนมัติ (เริ่มด้วยค่าเริ่มต้น)';
+  }
+}
+let saveTimer=null;
+function saveState(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    try{
+      await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+      document.getElementById('saveStatus').textContent = 'บันทึกล่าสุด '+new Date().toLocaleTimeString('th-TH');
+    }catch(e){
+      document.getElementById('saveStatus').textContent = 'ไม่สามารถบันทึกอัตโนมัติได้ในขณะนี้';
+    }
+  }, 400);
+}
+
+function fillInputs(){
+  document.querySelectorAll('[data-path]').forEach(el=>{
+    const v = getPath(state, el.dataset.path);
+    if(el.type==='checkbox') el.checked = !!v;
+    else el.value = v;
+  });
+}
+
+function calc(){
+  const p = state.prices, b = state.batch, o = state.oil, pk = state.packaging, pr = state.pricing;
+
+  const chiliCost = p.chiliSack / (b.sackYield||1);
+  const seasoning = (RECIPE.msgG/1000)*p.msg + (RECIPE.sugarG/1000)*p.sugar + (RECIPE.saltG/1000)*p.salt +
+    (RECIPE.flourSavepakG/1000)*p.flourSavepak + (RECIPE.flourKhaoJaoG/1000)*p.flourKhaoJao +
+    (RECIPE.flourManSamPalangG/1000)*p.flourManSamPalang + (RECIPE.flourKhaoPhodG/1000)*p.flourKhaoPhod +
+    (RECIPE.sesameG/1000)*p.sesame;
+  const materialPerBatch = chiliCost + seasoning;
+
+  const peelPerBatch = b.peelWage / (b.sackYield||1);
+  const wagePerBatch = peelPerBatch + b.boilWage + b.fryWage;
+
+  const oilBlended = (o.ratioBonus/100)*p.oilBonus + (o.ratioDokmai/100)*p.oilDokmai;
+  const oilGross = o.volumePerFill * oilBlended;
+  const oilResale = (o.usedOilGallonPrice/(o.usedOilGallonLiters||1)) * o.volumePerFill;
+  const oilNet = oilGross - oilResale;
+  const oilPerBatch = oilNet / (o.batchesPerFill||1);
+
+  const processPerBatch = wagePerBatch + oilPerBatch;
+  const totalPerBatch = materialPerBatch + processPerBatch;
+  const yieldKg = b.friedYieldKg || 1;
+  const perKg = totalPerBatch / yieldKg;
+
+  const matPer150 = (materialPerBatch/yieldKg)*0.150;
+  const matPer250 = (materialPerBatch/yieldKg)*0.250;
+  const procPer150 = (processPerBatch/yieldKg)*0.150;
+  const procPer250 = (processPerBatch/yieldKg)*0.250;
+
+  const tapePerBox = pk.tapePrice/(pk.boxesPerTapeRoll||1);
+  const bag150Unit = pk.bag150Pack/50;
+  const bag250Unit = pk.bag250Pack/50;
+  const pack150 = pk.enabled ? (pk.boxPrice + tapePerBox + bag150Unit + pk.stickerPrice) : 0;
+  const pack250 = pk.enabled ? (pk.boxPrice + tapePerBox + bag250Unit + pk.stickerPrice) : 0;
+
+  const total150 = matPer150 + procPer150 + pack150;
+  const total250 = matPer250 + procPer250 + pack250;
+
+  const net150 = pr.sell150 * (1 - pr.gp150/100);
+  const net250 = pr.sell250 * (1 - pr.gp250/100);
+  const profit150 = net150 - total150;
+  const profit250 = net250 - total250;
+
+  const ad = state.ads;
+  const n = ad.totalOrders||0;
+  const avgSell = (pr.sell150+pr.sell250)/2;
+  const avgNet = (net150+net250)/2;
+  const avgCost = (total150+total250)/2;
+  const grossSales = avgSell*n;
+  const netSales = avgNet*n;
+  const gpFee = grossSales - netSales;
+  const productCost = avgCost*n;
+  const adSpend = ad.totalAdSpend||0;
+  const netProfit = netSales - productCost - adSpend;
+  const adPct = grossSales ? (adSpend/grossSales*100) : NaN;
+  const cpa = n ? (adSpend/n) : NaN;
+
+  return { chiliCost, seasoning, materialPerBatch, peelPerBatch, wagePerBatch, oilGross, oilResale, oilPerBatch, processPerBatch, totalPerBatch,
+    matPer150, matPer250, procPer150, procPer250, tapePerBox, bag150Unit, bag250Unit, pack150, pack250, total150, total250,
+    net150, net250, profit150, profit250,
+    grossSales, netSales, gpFee, productCost, adSpend, netProfit, adPct, cpa };
+}
+
+function renderRecipeTable(c){
+  const p = state.prices;
+  const rows = [
+    ['พริกแกะแล้ว (เปลือก)', (RECIPE.chiliShellG/1000)+' กก.', '1 กระสอบ ÷ '+state.batch.sackYield+' ชุด', c.chiliCost],
+    ['ผงชูรส', RECIPE.msgG+' ก.', p.msg+' บ./กก.', (RECIPE.msgG/1000)*p.msg],
+    ['น้ำตาล', RECIPE.sugarG+' ก.', p.sugar+' บ./กก.', (RECIPE.sugarG/1000)*p.sugar],
+    ['เกลือ', RECIPE.saltG+' ก.', p.salt+' บ./กก.', (RECIPE.saltG/1000)*p.salt],
+    ['แป้งเซฟแพ็ก', RECIPE.flourSavepakG+' ก.', p.flourSavepak+' บ./กก.', (RECIPE.flourSavepakG/1000)*p.flourSavepak],
+    ['แป้งข้าวเจ้า', RECIPE.flourKhaoJaoG+' ก.', p.flourKhaoJao+' บ./กก.', (RECIPE.flourKhaoJaoG/1000)*p.flourKhaoJao],
+    ['แป้งมันสำปะหลัง', RECIPE.flourManSamPalangG+' ก.', p.flourManSamPalang+' บ./กก.', (RECIPE.flourManSamPalangG/1000)*p.flourManSamPalang],
+    ['แป้งข้าวโพด', RECIPE.flourKhaoPhodG+' ก.', p.flourKhaoPhod+' บ./กก.', (RECIPE.flourKhaoPhodG/1000)*p.flourKhaoPhod],
+    ['งาขาว', RECIPE.sesameG+' ก.', p.sesame+' บ./กก.', (RECIPE.sesameG/1000)*p.sesame],
+  ];
+  document.getElementById('recipeTable').innerHTML = rows.map(r=>
+    `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2]}</td><td class="num">${fmt(r[3])}</td></tr>`
+  ).join('');
+  document.getElementById('recipeTotal').textContent = baht(c.materialPerBatch);
+}
+
+function render(){
+  const c = calc();
+  renderRecipeTable(c);
+
+  document.getElementById('peelPerBatch').textContent = baht(c.peelPerBatch);
+  document.getElementById('wageTotal').textContent = baht(c.wagePerBatch);
+  document.getElementById('oilGross').textContent = baht(c.oilGross);
+  document.getElementById('oilResale').textContent = '-'+baht(c.oilResale);
+  document.getElementById('oilPerBatch').textContent = baht(c.oilPerBatch);
+  document.getElementById('processTotal').textContent = baht(c.processPerBatch);
+
+  const pkgOn = state.packaging.enabled;
+  document.getElementById('pkgFields').classList.toggle('dimmed', !pkgOn);
+  document.getElementById('pack150').textContent = baht(c.pack150);
+  document.getElementById('pack250').textContent = baht(c.pack250);
+
+  document.getElementById('s150-mat').textContent = baht(c.matPer150);
+  document.getElementById('s150-proc').textContent = baht(c.procPer150);
+  document.getElementById('s150-pack').textContent = baht(c.pack150);
+  document.getElementById('s150-total').textContent = baht(c.total150);
+  document.getElementById('s150-pct').textContent = fmt(c.total150/state.pricing.sell150*100)+' %';
+
+  document.getElementById('s250-mat').textContent = baht(c.matPer250);
+  document.getElementById('s250-proc').textContent = baht(c.procPer250);
+  document.getElementById('s250-pack').textContent = baht(c.pack250);
+  document.getElementById('s250-total').textContent = baht(c.total250);
+  document.getElementById('s250-pct').textContent = fmt(c.total250/state.pricing.sell250*100)+' %';
+
+  document.getElementById('net150').textContent = baht(c.net150);
+  document.getElementById('cost150ref').textContent = baht(c.total150);
+  document.getElementById('profit150').textContent = baht(c.profit150);
+  document.getElementById('profit150').style.color = c.profit150>=0 ? 'var(--good)' : 'var(--bad)';
+
+  document.getElementById('net250').textContent = baht(c.net250);
+  document.getElementById('cost250ref').textContent = baht(c.total250);
+  document.getElementById('profit250').textContent = baht(c.profit250);
+  document.getElementById('profit250').style.color = c.profit250>=0 ? 'var(--good)' : 'var(--bad)';
+
+  const floorBadge = document.getElementById('floorBadge150');
+  if(c.net150 < state.pricing.floorNet150){
+    const needed = state.pricing.floorNet150 / (1-state.pricing.gp150/100);
+    floorBadge.innerHTML = `<span class="badge warn">ยอดรับจริงต่ำกว่าที่ตั้งไว้ — ควรตั้งราคาขายอย่างน้อย ${fmt(needed)} บาท</span>`;
+  } else {
+    floorBadge.innerHTML = `<span class="badge ok">ยอดรับจริงถึงเป้าที่ตั้งไว้แล้ว</span>`;
+  }
+
+  const floorBadge250 = document.getElementById('floorBadge250');
+  if(c.net250 < state.pricing.floorNet250){
+    const needed250 = state.pricing.floorNet250 / (1-state.pricing.gp250/100);
+    floorBadge250.innerHTML = `<span class="badge warn">ยอดรับจริงต่ำกว่าที่ตั้งไว้ — ควรตั้งราคาขายอย่างน้อย ${fmt(needed250)} บาท</span>`;
+  } else {
+    floorBadge250.innerHTML = `<span class="badge ok">ยอดรับจริงถึงเป้าที่ตั้งไว้แล้ว</span>`;
+  }
+
+  const q150 = state.special.qty150||0, q250 = state.special.qty250||0;
+  document.getElementById('sp-qty150').textContent = q150;
+  document.getElementById('sp-qty250').textContent = q250;
+  document.getElementById('sp-cost150').textContent = baht(c.total150*q150);
+  document.getElementById('sp-profit150').textContent = baht(c.profit150*q150);
+  document.getElementById('sp-cost250').textContent = baht(c.total250*q250);
+  document.getElementById('sp-profit250').textContent = baht(c.profit250*q250);
+  document.getElementById('sp-costAll').textContent = baht(c.total150*q150 + c.total250*q250);
+  document.getElementById('sp-profitAll').textContent = baht(c.profit150*q150 + c.profit250*q250);
+
+  document.getElementById('ads-grossSales').textContent = baht(c.grossSales);
+  document.getElementById('ads-gpFee').textContent = '-'+baht(c.gpFee);
+  document.getElementById('ads-netSales').textContent = baht(c.netSales);
+  document.getElementById('ads-productCost').textContent = '-'+baht(c.productCost);
+  document.getElementById('ads-adSpend').textContent = '-'+baht(c.adSpend);
+  document.getElementById('ads-netProfit').textContent = baht(c.netProfit);
+  document.getElementById('ads-netProfit').style.color = c.netProfit>=0 ? 'var(--good)' : 'var(--bad)';
+  document.getElementById('ads-cpa').textContent = isNaN(c.cpa) ? '-' : baht(c.cpa);
+  document.getElementById('ads-pct').textContent = isNaN(c.adPct) ? '-' : fmt(c.adPct)+' %';
+}
+
+document.getElementById('tabs').addEventListener('click', e=>{
+  const btn = e.target.closest('.tab-btn'); if(!btn) return;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(btn.dataset.tab).classList.add('active');
+});
+
+document.addEventListener('input', e=>{
+  const el = e.target;
+  if(!el.dataset || !el.dataset.path) return;
+  const val = el.type==='checkbox' ? el.checked : parseFloat(el.value);
+  setPath(state, el.dataset.path, el.type==='checkbox' ? val : (isNaN(val)?0:val));
+  render();
+  saveState();
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(!confirm('ล้างค่าทั้งหมดกลับเป็นค่าเริ่มต้น?')) return;
+  state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  fillInputs(); render(); saveState();
+});
+
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const c = calc();
+  const rows = [
+    ['รายการ','150 กรัม','250 กรัม'],
+    ['ต้นทุนวัตถุดิบ+เครื่องปรุง', c.matPer150.toFixed(2), c.matPer250.toFixed(2)],
+    ['ค่าแปรรูป (จ้าง+น้ำมัน)', c.procPer150.toFixed(2), c.procPer250.toFixed(2)],
+    ['บรรจุภัณฑ์', c.pack150.toFixed(2), c.pack250.toFixed(2)],
+    ['รวมต้นทุน', c.total150.toFixed(2), c.total250.toFixed(2)],
+    ['ราคาขาย', state.pricing.sell150, state.pricing.sell250],
+    ['ยอดรับจริงหลังหัก GP', c.net150.toFixed(2), c.net250.toFixed(2)],
+    ['กำไรต่อถุง', c.profit150.toFixed(2), c.profit250.toFixed(2)],
+  ];
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob(["\uFEFF"+csv], {type:'text/csv;charset=utf-8;'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'สรุปต้นทุนพริกทอด.csv';
+  link.click();
+});
+
+(async ()=>{
+  await loadState();
+  fillInputs();
+  render();
+})();
+</script>
+</body>
+</html>
