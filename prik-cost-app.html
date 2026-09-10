@@ -133,6 +133,7 @@ tr.sum td{border-top:1.5px solid var(--ink);border-bottom:none;font-weight:700;p
     <button class="tab-btn" data-tab="t6">6. ตั้งราคาขาย</button>
     <button class="tab-btn" data-tab="t7">7. คำนวณยอดขาย</button>
     <button class="tab-btn" data-tab="t8">8. ค่าแอด</button>
+    <button class="tab-btn" data-tab="t9">9. จ่ายค่าแรง</button>
   </div>
 
   <!-- TAB 1 -->
@@ -370,6 +371,31 @@ tr.sum td{border-top:1.5px solid var(--ink);border-bottom:none;font-weight:700;p
     </div>
   </div>
 
+  <!-- TAB 9 -->
+  <div class="panel" id="t9">
+    <div class="card">
+      <h2>จ่ายค่าแรง (แกะ+ต้ม+ทอด)</h2>
+      <div class="sub">ใส่จำนวนงานที่ลูกน้องทำในรอบนี้ ระบบจะดึงอัตราค่าจ้างจากหน้า "ค่าจ้าง+น้ำมัน" มาคูณให้ ได้ยอดที่ต้องจ่ายทันที</div>
+
+      <div class="field-row"><label>จำนวนกระสอบที่แกะ</label>
+        <div class="input-wrap"><input type="number" step="1" data-path="payroll.sacksPeeled"><span class="unit">กระสอบ</span></div></div>
+      <div class="field-row"><label>จำนวนชุดที่ต้ม</label>
+        <div class="input-wrap"><input type="number" step="1" data-path="payroll.batchesBoiled"><span class="unit">ชุด</span></div></div>
+      <div class="field-row"><label>จำนวนชุดที่ทอด</label>
+        <div class="input-wrap"><input type="number" step="1" data-path="payroll.batchesFried"><span class="unit">ชุด</span></div></div>
+
+      <table>
+        <thead><tr><th>งาน</th><th class="num">จำนวน</th><th class="num">อัตรา</th><th class="num">ยอดจ่าย</th></tr></thead>
+        <tbody>
+          <tr><td>ค่าแกะพริก</td><td class="num" id="pr-nPeel">-</td><td class="num" id="pr-ratePeel">-</td><td class="num" id="pr-payPeel">-</td></tr>
+          <tr><td>ค่าต้ม</td><td class="num" id="pr-nBoil">-</td><td class="num" id="pr-rateBoil">-</td><td class="num" id="pr-payBoil">-</td></tr>
+          <tr><td>ค่าทอด</td><td class="num" id="pr-nFry">-</td><td class="num" id="pr-rateFry">-</td><td class="num" id="pr-payFry">-</td></tr>
+          <tr class="sum"><td colspan="3">รวมยอดจ่ายทั้งหมด</td><td class="num" id="pr-payTotal">-</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="footer-note" id="saveStatus">กำลังโหลดข้อมูล...</div>
 </div>
 
@@ -388,7 +414,8 @@ const DEFAULT_STATE = {
   packaging:{ enabled:true, boxPrice:2.5, tapePrice:36, boxesPerTapeRoll:50, bag150Pack:155, bag250Pack:190, stickerPrice:1 },
   pricing:{ sell150:150, gp150:26.39, sell250:240, gp250:0, floorNet150:150, floorNet250:200 },
   special:{ qty150:0, qty250:0 },
-  ads:{ totalOrders:0, totalAdSpend:0 }
+  ads:{ totalOrders:0, totalAdSpend:0 },
+  payroll:{ sacksPeeled:0, batchesBoiled:0, batchesFried:0 }
 };
 
 let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -490,10 +517,17 @@ function calc(){
   const adPct = grossSales ? (adSpend/grossSales*100) : NaN;
   const cpa = n ? (adSpend/n) : NaN;
 
+  const pl = state.payroll;
+  const payPeel = (pl.sacksPeeled||0) * b.peelWage;
+  const payBoil = (pl.batchesBoiled||0) * b.boilWage;
+  const payFry = (pl.batchesFried||0) * b.fryWage;
+  const payTotal = payPeel + payBoil + payFry;
+
   return { chiliCost, seasoning, materialPerBatch, peelPerBatch, wagePerBatch, oilGross, oilResale, oilPerBatch, processPerBatch, totalPerBatch,
     matPer150, matPer250, procPer150, procPer250, tapePerBox, bag150Unit, bag250Unit, pack150, pack250, total150, total250,
     net150, net250, profit150, profit250,
-    grossSales, netSales, gpFee, productCost, adSpend, netProfit, adPct, cpa };
+    grossSales, netSales, gpFee, productCost, adSpend, netProfit, adPct, cpa,
+    payPeel, payBoil, payFry, payTotal };
 }
 
 function renderRecipeTable(c){
@@ -588,6 +622,18 @@ function render(){
   document.getElementById('ads-netProfit').style.color = c.netProfit>=0 ? 'var(--good)' : 'var(--bad)';
   document.getElementById('ads-cpa').textContent = isNaN(c.cpa) ? '-' : baht(c.cpa);
   document.getElementById('ads-pct').textContent = isNaN(c.adPct) ? '-' : fmt(c.adPct)+' %';
+
+  const pl = state.payroll;
+  document.getElementById('pr-nPeel').textContent = pl.sacksPeeled||0;
+  document.getElementById('pr-ratePeel').textContent = fmt(state.batch.peelWage)+' บ./กระสอบ';
+  document.getElementById('pr-payPeel').textContent = baht(c.payPeel);
+  document.getElementById('pr-nBoil').textContent = pl.batchesBoiled||0;
+  document.getElementById('pr-rateBoil').textContent = fmt(state.batch.boilWage)+' บ./ชุด';
+  document.getElementById('pr-payBoil').textContent = baht(c.payBoil);
+  document.getElementById('pr-nFry').textContent = pl.batchesFried||0;
+  document.getElementById('pr-rateFry').textContent = fmt(state.batch.fryWage)+' บ./ชุด';
+  document.getElementById('pr-payFry').textContent = baht(c.payFry);
+  document.getElementById('pr-payTotal').textContent = baht(c.payTotal);
 }
 
 document.getElementById('tabs').addEventListener('click', e=>{
